@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP02 Trainer - Technischer Produktdesigner</title>
+<style>
+    :root {
+        --primary: #3b82f6;
+        --primary-dark: #2563eb;
+        --success: #22c55e;
+        --error: #ef4444;
+        --bg-light: #f3f4f6;
+        --card-light: #ffffff;
+        --text-light: #1f2937;
+        
+        --bg-dark: #111827;
+        --card-dark: #1f2937;
+        --text-dark: #f3f4f6;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        background-color: var(--bg-light);
+        color: var(--text-light);
+        transition: background-color 0.3s, color 0.3s;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+    }
+
+    body.dark {
+        background-color: var(--bg-dark);
+        color: var(--text-dark);
+    }
+
+    /* Header & Controls */
+    header {
+        width: 100%;
+        max-width: 800px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    h1 { margin: 0; font-size: 1.5rem; }
+
+    .controls {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-control {
+        background: none;
+        border: 2px solid currentColor;
+        padding: 8px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 600;
+        color: inherit;
+        transition: all 0.2s;
+    }
+
+    .btn-control:hover { opacity: 0.7; }
+    .btn-control.active { background-color: var(--primary); border-color: var(--primary); color: white; }
+
+    /* Progress Bar */
+    .progress-container {
+        width: 100%;
+        max-width: 800px;
+        background-color: #e5e7eb;
+        border-radius: 10px;
+        height: 10px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    body.dark .progress-container { background-color: #374151; }
+
+    .progress-bar {
+        height: 100%;
+        background-color: var(--primary);
+        width: 0%;
+        transition: width 0.5s ease;
+    }
+
+    /* Quiz Card */
+    .quiz-card {
+        background-color: var(--card-light);
+        width: 100%;
+        max-width: 800px;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: background-color 0.3s, transform 0.3s;
+    }
+
+    body.dark .quiz-card {
+        background-color: var(--card-dark);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    }
+
+    /* --- Layout Update: Header der Karte --- */
+
+    .question-meta {
+        display: flex;
+        justify-content: space-between; /* Drückt "Frage..." nach links und Score nach rechts */
+        align-items: center;            /* Zentriert beide vertikal */
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    /* Styling für "FRAGE X / Y" */
+    .meta-count {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Styling für den Score rechts */
+    .score-indicator {
+        display: flex;
+        gap: 15px;
+        font-weight: 800;
+        background: rgba(0,0,0,0.05);
+        padding: 8px 15px;
+        border-radius: 10px;
+        font-size: 1rem;
+    }
+    .score-correct { color: var(--success); }
+    .score-wrong { color: var(--error); }
+
+    /* Dark Mode Anpassungen */
+    body.dark .question-meta { border-color: #374151; }
+    body.dark .meta-count { color: #9ca3af; }
+    body.dark .score-indicator { background: rgba(255,255,255,0.05); }
+
+    .question-meta {
+        font-size: 0.9rem;
+        color: #6b7280;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: bold;
+    }
+    
+    body.dark .question-meta { color: #9ca3af; }
+
+    .img-container {
+        text-align: center;
+        margin-bottom: 20px;
+        padding: 10px;
+        background: #fff;
+        border-radius: 8px;
+    }
+    
+    .img-container svg {
+        max-width: 100%;
+        max-height: 200px;
+    }
+
+    /* Answers */
+    .answers-grid {
+        display: grid;
+        gap: 12px;
+    }
+
+    .answer-btn {
+        background-color: rgba(0,0,0,0.05);
+        border: 2px solid transparent;
+        padding: 15px;
+        border-radius: 10px;
+        color: inherit;
+        font-size: 1rem;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    body.dark .answer-btn { background-color: rgba(255,255,255,0.05); }
+
+    .answer-btn:hover:not(:disabled) {
+        background-color: rgba(0,0,0,0.1);
+        border-color: #ccc;
+    }
+    body.dark .answer-btn:hover:not(:disabled) {
+        background-color: rgba(255,255,255,0.1);
+        border-color: #555;
+    }
+
+    .answer-btn.correct {
+        background-color: var(--success) !important;
+        color: white;
+        border-color: var(--success);
+        animation: pulse 0.5s;
+    }
+
+    .answer-btn.wrong {
+        background-color: var(--error) !important;
+        color: white;
+        border-color: var(--error);
+        animation: shake 0.4s;
+    }
+
+    .answer-btn:disabled { cursor: default; opacity: 0.7; }
+
+    /* Next Button */
+    .next-btn {
+        margin-top: 25px;
+        width: 100%;
+        padding: 15px;
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(10px);
+        transition: all 0.3s;
+    }
+
+    .next-btn.show {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+    
+    .next-btn:hover { background-color: var(--primary-dark); }
+
+    /* Animations */
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+        100% { transform: scale(1); }
+    }
+    
+    /* Result Screen */
+    .result-container { text-align: center; }
+    .score-circle {
+        width: 150px;
+        height: 150px;
+        background: var(--primary);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 0 auto 20px;
+        box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+
+    /* Neue Score-Anzeige */
+    .score-indicator {
+        display: flex;
+        gap: 15px;
+        font-weight: 800;
+        background: rgba(0,0,0,0.05);
+        padding: 5px 12px;
+        border-radius: 8px;
+    }
+    .score-correct { color: var(--success); }
+    .score-wrong { color: var(--error); }
+    
+    body.dark .score-indicator { background: rgba(255,255,255,0.05); }
+    }
+
+</style>
+</head>
+<body>
+
+<header>
+    <h1>AP02 Trainer</h1>
+    <div class="controls">
+        <button class="btn-control" id="ai-toggle" onclick="toggleAIMode()">🤖 Experte: AUS</button>
+        <button class="btn-control" onclick="toggleDarkMode()">🌙</button>
+    </div>
+</header>
+
+<div class="progress-container">
+    <div class="progress-bar" id="progress-bar"></div>
+</div>
+
+<div class="quiz-card" id="quiz-card">
+    <!-- Quiz Content injected here -->
+</div>
+
+<script>
+// --- SVG Grafiken als Strings (für die neuen Bildfragen) ---
+const svgGDT = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="border:1px solid #ccc;">
+  <rect x="20" y="20" width="60" height="60" fill="none" stroke="black" stroke-width="2"/>
+  <line x1="20" y1="20" x2="80" y2="80" stroke="black" stroke-width="1"/>
+  <line x1="80" y1="20" x2="20" y2="80" stroke="black" stroke-width="1"/>
+  <circle cx="50" cy="50" r="15" fill="none" stroke="red" stroke-width="3"/>
+  <line x1="50" y1="20" x2="50" y2="80" stroke="black" stroke-dasharray="4"/>
+  <line x1="20" y1="50" x2="80" y2="50" stroke="black" stroke-dasharray="4"/>
+</svg>`;
+
+const svgProj = `<svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+    <!-- Vorderansicht: Ein L -->
+    <path d="M20 80 L80 80 L80 20 L60 20 L60 60 L20 60 Z" fill="#ccc" stroke="black" stroke-width="2"/>
+    <text x="50" y="95" font-size="12" text-anchor="middle">Vorderansicht</text>
+    <text x="150" y="95" font-size="12" text-anchor="middle">Seitenansicht ?</text>
+    <rect x="130" y="20" width="40" height="60" fill="none" stroke="#333" stroke-dasharray="4"/>
+</svg>`;
+
+// --- Datenbasis ---
+
+// 1. Die VOLLSTÄNDIGE Liste deiner Fragen (gefiltert um Fragen mit fehlenden Bildern)
+const originalQuestions = [
+    { question: "Ein Firmeninhaber (Ausbildende) schließt mit einem Jugendlichen einen Berufsausbildungsvertrag ab. Wer muss diesen Vertrag unterschreiben?", answers: ["Nur der Ausbildende und der Auszubildende", "Nur der Ausbildende und der gesetzliche Vertreter des Auszubildenden", "Der Ausbildende, der Auszubildende und dessen gesetzlicher Vertreter", "Der Ausbildende, der Auszubildende und der Direktor der Berufsschule", "Der Ausbildende, der Auszubildende und der Vertreter der IHK"], correct: 2 },
+    { question: "Welche Aussage über den Arbeitsvertrag ist richtig?", answers: ["Ein befristeter Arbeitsvertrag muss schriftlich abgeschlossen werden, damit die Befristung wirksam ist.", "Arbeitsbedingungen werden in Betriebsvereinbarungen und nicht im Arbeitsvertrag geregelt.", "Eine einseitige Änderung der Bedingungen des Arbeitsvertrags durch den Arbeitnehmer ist jederzeit möglich.", "Der Arbeitsvertrag wird erst nach Ablauf der Probezeit gültig.", "Änderungen wesentlicher Bedingungen des Arbeitsvertrags sind grundsätzlich nicht möglich."], correct: 0 },
+    { question: "Welche Aussage über den Mindesturlaub für Arbeitnehmer entspricht dem Gesetz?", answers: ["Jeder Arbeitnehmer hat in jedem Kalenderjahr Anspruch auf unbezahlten Sonderurlaub.", "Der volle Urlaubsanspruch wird erstmalig nach sechsmonatigem Bestehen des Arbeitsverhältnisses erworben.", "Für Arbeitnehmer über 18 Jahre beträgt die gesetzliche Mindesturlaubsdauer 30 Werktage.", "Kann der Urlaub aus persönlichen Gründen des Arbeitnehmers nicht genommen werden, ist er abzugelten.", "In wirtschaftlich schwieriger Lage kann der Arbeitgeber unbezahlten Sonderurlaub anordnen."], correct: 1 },
+    { question: "Welche Maßnahme zählt zur beruflichen Fortbildung nach dem Berufsbildungsgesetz (BBIG)?", answers: ["Betriebspraktikum in der Berufsvorbereitung", "Berufsausbildung", "Besuch der Meisterschule", "Nachholen des Hauptschulabschlusses", "Teilnahme an einer Umschulung"], correct: 2 },
+    { question: "Das Gesetz zum Elterngeld und zur Erziehungszeit (BEEG) regelt den Anspruch auf Elternzeit. Wie lange wahrt der Anspruch eines Arbeitnehmers auf Elternzeit?", answers: ["Nur so lange, bis für das Kind ein Platz in einer Kinderkrippe mit Ganztagsbetreuung frei ist", "Nur so lange, wie der Anspruch auf Erziehungsgeld reicht und dieses auch bezahlt wird", "Längstens bis zur Vollendung des ersten Lebensjahrs des Kindes", "Längstens bis zur Vollendung des zweiten Lebensjahrs des Kindes", "Höchstens drei Jahre insgesamt"], correct: 4 },
+    { question: "Eine Arbeitnehmerin unterhält sich in der Pause mit dem Betriebsrat über ihre Kündigung. Welche Aussage ist richtig?", answers: ["Eine mündlich ausgesprochene Kündigung ist rechtswirksam.", "Eine Kündigung ist ohne Anhörung des Betriebsrats wirksam.", "Eine Kündigung kann einseitig rechtswirksam zurückgenommen werden.", "Eine fristlose Kündigung kann nur vom Arbeitnehmer ausgesprochen werden.", "Eine ordentliche Kündigung bedarf der Schriftform."], correct: 4 },
+    { question: "Laut Grundgesetz haben alle Deutschen das Recht, Vereinigungen zu gründen und damit ihre Interessen besser zu verfolgen. Welche Vereinigung hat die deutsche Industrie gegründet?", answers: ["Industriegewerkschaft (IG)", "Industrie- und Handelskammer (IHK)", "Handwerkskammer (HWK)", "Verband Deutscher Ingenieure (VDI)", "Bundesverband der Deutschen Industrie (BDI)"], correct: 1 },
+    { question: "Welche Aussage über die Gewerkschaften ist richtig?", answers: ["Gewerkschaften dürfen sich nicht an erwerbswirtschaftlich betriebenen Unternehmungen beteiligen.", "Gewerkschaften schließen mit den Unternehmensleitungen Betriebsvereinbarungen ab.", "Gewerkschaften vertreten die Forderungen der organisierten Arbeitnehmer gegenüber den Arbeitgebern.", "Gewerkschaften sind Zusammenschlüsse aller Beschäftigten eines Wirtschaftszweiges.", "Gewerkschaften sind in der Vollversammlung der Industrie- und Handelskammer vertreten."], correct: 2 },
+    { question: "Tarifverhandlungen bleiben ohne Ergebnis. Was passiert dann?", answers: ["Die Betriebe entscheiden allein über die Höhe der zu zahlenden Vergütungen.", "Die alten Tarifverträge gelten zunächst weiter.", "Die Bundesschlichtungsämter entscheidet den Tarifstreit durch Los.", "Die Tarifparteien sind an die Entscheidungen des unabhängigen Schlichters gebunden.", "Die Tarifvertragspartner ziehen die Agentur für Arbeit als weiteren Schlichter hinzu."], correct: 1 },
+    { question: "Für welche Sozialversicherung zahlt der Arbeitgeber die Beiträge allein?", answers: ["Krankenversicherung", "Unfallversicherung", "Rentenversicherung", "Arbeitslosenversicherung", "Pflegeversicherung"], correct: 1 },
+    { question: "Wer legt die Höhe der Beiträge für die Rentenversicherung fest?", answers: ["Die Landtage", "Arbeitgeber und Gewerkschaften", "Die Geschäftsführung der Deutschen Rentenversicherung", "Eine Kommission aus Vertretern des Bundestags und des Bundesrats", "Der Bundestag"], correct: 4 },
+    { question: "Welche Aussage über die gesetzlichen Sozialversicherungen ist richtig?", answers: ["Die Höhe der Beiträge ist unabhängig von der Einkommenshöhe der Versicherten.", "Die Arbeitnehmer überweisen die Beiträge an die Träger der Sozialversicherungen.", "Die Sozialversicherungen decken alle Risiken des Lebens ab.", "Die Pflichtleistungen der Versicherungen werden durch Gesetze vorgeschrieben.", "Die Beiträge der Sozialversicherungen werden von den Landesregierungen festgelegt."], correct: 3 },
+    { question: "Zur Finanzierung seiner Aufgaben benötigt der Staat Geld. Wie kann sich die Bundesrepublik Deutschland die erforderlichen Einnahmen verschaffen?", answers: ["Geld drucken", "Überschüsse aus den Lebensversicherungen der Bürger verwenden", "Neuverschuldung senken", "Steuern und Abgaben erheben", "Große Vermögenswerte enteignen"], correct: 3 },
+    { question: "Welche Voraussetzung muss ein Mensch erfüllen, damit er Bürger der Europäischen Union (EU) ist?", answers: ["Er muss an einer Wahl zum Europäischen Parlament teilgenommen haben.", "Er muss mindestens 10 Jahre im Gebiet der EU gelebt haben.", "Er muss einen Eid auf die EU-Verfassung abgelegt haben.", "Er muss den Aufnahmetest der EU bestehen.", "Er muss Bürger eines EU-Staates sein."], correct: 4 },
+    { question: "Frau W. und Herr M. haben geheiratet. Sie haben keinen Ehevertrag geschlossen. Was gilt für das Vermögen des Ehepaars im Falle einer Scheidung?", answers: ["Das während der Ehe erwirtschaftete Vermögen wird je zur Hälfte geteilt.", "Das vor und in der Ehe erwirtschaftete Vermögen wird je zur Hälfte geteilt.", "Jeder Partner erhält das von ihm selber vor und während der Ehe erwirtschaftete Vermögen.", "Herr M. bekommt das gesamte Vermögen.", "Frau W. bekommt das gesamte Vermögen."], correct: 2 },
+    { question: "Welche Aussage über das Sparbuch ist richtig?", answers: ["Ein Sparbuch wird erst ab einem Guthaben von 1000 EUR ausgestellt.", "Der Zinssatz liegt immer über der Inflationsrate.", "Es dient dem bargeldlosen Zahlungsverkehr.", "Sparbücher können an der Börse gehandelt werden.", "Die Geldanlage ist risikoarm."], correct: 4 },
+    { question: "In der Wirtschaftslehre unterscheidet man zwischen Unternehmung und Betrieb. Welche Aussage über den Betrieb ist richtig?", answers: ["Jeder Betrieb ist Teil einer Unternehmung.", "Der Betrieb gehört immer zum technischen Bereich der Unternehmung.", "Der Betrieb entscheidet über die Ziele der Unternehmung.", "Betriebe gibt es nur in marktwirtschaftlichen Wirtschaftssystemen.", "Die Betriebsleitung stellt die Mitarbeiter der Unternehmungsleitung ein."], correct: 0 },
+    { question: "Bei welcher Produktion spielt der Produktionsfaktor Kapital die wichtigste Rolle?", answers: ["Industrielle Herstellung von Werkzeugmaschinen", "Anfertigung eines Gemäldes", "Einzelfenster von Bekleidungsstücken", "Weinanbau", "Kunsthandwerkliche Herstellung von Gebrauchsgegenständen"], correct: 0 },
+    { question: "Welche der genannten Bedingungen ist keine Abhängigkeit für die räumliche Positionierung von Bauteilen im 3D-Modell beim Zusammenbau?", answers: ["Kontaktbedingung", "Fixieren", "Eltern-Kind-Bedingung", "Offsetbedingung", "Winkelbedingung"], correct: 2 },
+    { question: "Welches Kriterium ist nach dem Kano-Modell am Beispiel eines Autos als Grund-/Basisanforderung zu klassifizieren?", answers: ["Leistung 125 kW", "3 Sonderfarben", "Beschleunigung von 0 auf 100 km/h in 8,5 s", "Verbrauch 5,8 L/100 km", "4 Räder"], correct: 4 },
+    { question: "Wie heißt das Dokument, welches die Einzelteile einer Baugruppe im nichtmontierten Zustand zeichnerisch darstellt?", answers: ["Gesamtzeichnung", "Stückliste", "Explosionszeichnung", "Gebrauchsanweisung", "Einzelteilzeichnungen"], correct: 2 },
+    { question: "Welcher Begriff gehört nicht in die Kategorisierung eines Ishikawa-Diagramms?", answers: ["Management", "Mensch", "Methode", "Material", "Meilenstein"], correct: 4 },
+    { question: "Welche der aufgeführten Bauteile dürfen generell nicht im Vollschnitt dargestellt werden?", answers: ["Wälzlager", "Wellen ohne Hohlräume in Längsrichtung", "Federn", "Radialwellendichtringe", "Normteile"], correct: 0 },
+    { question: "In einer Zeichnung ist im Schriftkopf folgende Norm angegeben: ISO 2768-f. In der Zeichnung ist ein Maß mit 8 ± 0,1 mm angegeben. Welche Aussage ist richtig?", answers: ["Das Maß ist überbestimmt.", "ISO 2768-f gibt es nicht als Allgemeintoleranz.", "Die Maßangabe mit Toleranz ist korrekt eingetragen.", "Wenn ISO 2786-f eingetragen ist, werden grundsätzlich keine zusätzlichen Toleranzen in Zeichnungen eingetragen.", "Es gilt nur ISO 2768-mk."], correct: 2 },
+    { question: "Über welchen menschlichen Sinn erfolgt die haptische Wahrnehmung?", answers: ["Sehen", "Hören", "Riechen", "Schmecken", "Tasten"], correct: 4 },
+    { question: "Welches der aufgeführten Sicherungselemente für Schraubenverbindungen erfüllt die Aufgabe des stoffschlüssigen Sicherns?", answers: ["Kronenmutter mit Splint", "Flüssigklebstoff", "Drahtsicherung", "Kontermutter", "Sicherungsblech"], correct: 1 },
+    { question: "Welches Maschinenelement erfüllt alle nachstehenden Funktionsanforderungen? – Drehmomente übertragen, – Stöße aufnehmen, – Drehzahlen stufenlos ändern, – Drehrichtung wandeln", answers: ["Riemenantrieb", "Wälzlager", "Gleitlager", "Radialwellendichtring", "Kupplung"], correct: 0 },
+    { question: "Welcher der nachfolgenden englischen Begriffe steht für die Funktion, die in einer Batterie die Umwandlung von chemischer Energie in elektrische Energie beschreibt?", answers: ["To compress", "To expand", "To close/open", "To convert", "To eject"], correct: 3 },
+    { question: "Welches Verfahren gehört nicht zu den Fügeverfahren durch Umformen?", answers: ["Bördeln", "Tiefziehen", "Falzen", "Nieten", "Durchsetzfügen/Clinchen"], correct: 1 },
+    { question: "Welche Aussage über das Gießen ist richtig?", answers: ["Zur Anfertigung der Sandform wird ein fertiges Werkstück benötigt.", "Gießen gehört zu den spanenden Fertigungsverfahren.", "Gießen ist für kleine Stückzahlen immer geeignet.", "Das Gussstück ist kleiner als das Modell.", "Das Schwindmaß muss bei Sandformen nicht berücksichtigt werden."], correct: 3 },
+    { question: "Welches der genannten Verfahren ist nicht zum Trennen von Kunststoffen geeignet?", answers: ["Fräsen", "Wasserstrahlschneiden", "Drahterodieren", "Drehen", "Schleifen"], correct: 2 },
+    { question: "Welches der genannten Produkte wird durch Kaladrieren hergestellt?", answers: ["Flaschen", "Schraubverschlüsse", "Folien", "Profile", "Schläuche"], correct: 2 },
+    { question: "Was ist unter einem additiven Fertigungsverfahren zu verstehen?", answers: ["Ein Werkstück wird durch eine Kombination von spanender und manueller Fertigung erzeugt.", "Das Verfahren gehört zu den Umformverfahren.", "Ein Werkstück wird schichtweise durch spezielle Fertigungsverfahren aufgebaut.", "Ein Produkt wird sowohl mechanisch als auch elektrochemisch bearbeitet.", "Ein Bauteil wird zunächst wärmebehandelt und dann beschichtet."], correct: 2 },
+    { question: "Welche Aussage zum Thema Bedürfnisse ist richtig?", answers: ["Werbung kann die Bedürfnisse des Menschen nicht beeinflussen.", "Bedürfnisse werden nur durch Sachgüter befriedigt.", "Eine Urlaubsreise ist ein Existenzbedürfnis.", "Nahrung ist für alle Menschen", "Landesverteidigung ist ein Individualbedürfnis."], correct: 4 },
+    { question: "Was ist kein Existenzbedürfnis?", answers: ["Wohnung", "Essen", "Trinken", "Auto", "Kleidung"], correct: 3 },
+    { question: "In welchem der genannten Fälle ist ein einseitiges Rechtsgeschäft genannt?", answers: ["Kauf eines Fahrrads", "Anmietung einer Wohnung", "Kündigung eines Arbeitsvertrags", "Abschluss eines Arbeitsvertrags", "Abschluss eines Leasingvertrags"], correct: 2 },
+    { question: "Warum fördert der Staat Existenzgründungen?", answers: ["Um die Konjunktur zu dämpfen", "Um den Krankenkassen mehr Mitglieder zu verschaffen", "Um die freie Marktwirtschaft zu stärken", "Um das Kapital in Arbeitnehmerhänden zu vergrößern", "Um die Sozialausgaben für Arbeitslose zu reduzieren"], correct: 4 },
+    { question: "Ein Existenzgründer muss verschiedene Fragen klären. Welche der fünf Fragen gehört dazu?", answers: ["Welche Krankenkasse sollen die Mitarbeiter wählen?", "Wer soll Geschäftsführer des Unternehmens werden?", "In welcher Kammer soll das Unternehmen Mitglied werden?", "Soll das Unternehmen in den Deutschen Gewerkschaftsbund (DGB) eintreten?", "Welche Steuern sollen bezahlt werden?"], correct: 1 },
+    { question: "Bei der Wahl des Standorts für einen industriellen Großbetrieb können sich die Unternehmer für Deutschland oder das Ausland entscheiden. Welcher Entscheidungsfaktor verliert dabei immer mehr an Bedeutung?", answers: ["Die Höhe der Lohnkosten am Standort", "Die Höhe der Steuern", "Die Kosten für die Erfüllung von Umweltschutzbestimmungen", "Die Dauer von Genehmigungsverfahren bei Neu- oder Umbauten", "Die Verfügbarkeit von ausgebildeten Arbeitskräften"], correct: 3 },
+    { question: "Welche Aussage entspricht dem Modell des freien Welthandels?", answers: ["Deutsche Milchbauern erhalten weitere Subventionen von der Europäischen Union (EU).", "Die USA haben das Einfuhrverbot für Waren aus Kuba auf.", "Die EU legt weitere Qualitätsnormen für Bananen fest.", "Die EU verschärft das Reinheitsgebot für den Kakaoanteil in Schokolade.", "Der UN-Sicherheitsrat verbietet den Export bestimmter Maschinen in den Iran."], correct: 1 },
+    { question: "Wo wird die offene Zinkung angewendet?", answers: ["Beim Rahmenecken", "Bei Breitenverbindungen", "Bei Längsverbindungen", "Bei kastenförmigen Verbindungen aus Spanplatten", "Bei kastenförmigen Verbindungen aus Vollholz"], correct: 4 },
+    { question: "Welche Antwort trifft bei der auf Gehrung gefederten Ecke zu?", answers: ["Formfedern sind aus Metallwerkstoffen.", "Formfedern sind selbstsichernde Verbindungs­mittel.", "Formfedern müssen zusätzlich verleimt/gesichert werden.", "Formfedern sind nur bei Vollholz geeignet.", "Formfedern sind möglichst weit an der Außenkante zu positionieren."], correct: 2 },
+    { question: "Welche Antwort trifft auf das Gießen zu?", answers: ["Beim Druckgießen werden verlorene Formen eingesetzt.", "Beim Maschinenformen werden Dauerformen genutzt.", "Beim Feingießen werden Dauermodelle eingesetzt.", "Beim Kokillengießen werden Dauerformen benutzt.", "Beim Stranggießen werden verlorene Modelle eingesetzt."], correct: 3 },
+    { question: "Bei lösbaren Schnappverbindungen muss ein Teil der Verbindung aus elastischem Werkstoff bestehen, der sich beim Fügen und Lösen um die Schnappnasen verformen lässt. Welche Voraussetzung muss in Bezug auf die Form der Wülste gegeben sein?", answers: ["Wülste mit Planflächen zu beiden Seiten", "Wülste mit Planflächen nur in Richtung des Fügens", "Wülste mit Planflächen in Richtung des Lösens", "Wülste mit Schrägen in Richtung des Fügens", "Wülste mit Schrägen in beide Richtungen"], correct: 4 },
+    { question: "Welchen Vorteil hat das Kleben von Stahl gegenüber dem Hartlöten und Schweißen?", answers: ["Die chemische Beständigkeit von Klebeverbindungen ist größer.", "Die Zugfestigkeit von Klebeverbindungen ist wesentlich größer.", "Die elektrische Leitfähigkeit von Klebeverbindungen ist größer.", "Der Gefügezustand der gefügten Werkstücke wird nicht verändert.", "Die Warmfestigkeit von Klebeverbindungen ist größer."], correct: 3 },
+    { question: "Welche Passungsempfehlung trifft auf das Anwendungsbeispiel Buchsen in Gehäusen zu?", answers: ["H7/u8", "H6/e8", "H7/r6", "H8/d9", "H7/h6"], correct: 2 },
+    { question: "Welche der Aussagen zur Projektionsmethode 1 nach DIN ISO 128 ist richtig?", answers: ["Die Draufsicht liegt über der Vorderansicht.", "Die Seitenansichten liegen immer gemäß der Bezeichnung links für links neben dem Bauteil – rechts für rechts neben dem Bauteil.", "Die Untersicht ist unterhalb der Vorderansicht.", "Die Seitenansicht von links wird rechts von der Vorderansicht dargestellt.", "Rückansichten werden nicht dargestellt."], correct: 0 },
+    { question: "Welche Art der Kommunikation ist für die Übertragung von Daten die sicherste Methode?", answers: ["Übertragung per E-Mail", "Übertragung per USB", "Übertragung per SSL", "Übertragung per Cloud", "Übertragung per Post -"], correct: 2 },
+    { question: "Welcher Aussage über Fertigungszeichnungen stimmen Sie zu?", answers: ["Fertigungszeichnungen werden immer von Hand gefertigt.", "Fertigungszeichnungen zeigen die Fertigungsmaschine zur Herstellung eines Bauteils.", "Fertigungszeichnungen stellen den Zusammenbau eines Bauteils dar.", "Fertigungszeichnungen enthalten die erforderlichen Informationen zur Herstellung eines Bauteils.", "Fertigungszeichnungen enthalten grundsätzlich keine Form- und Lagetoleranzen."], correct: 3 },
+    { question: "Welche Methode ist für die weiterführende Belastungsberechnung von CAD-Bauteilen geeignet?", answers: ["DWG", "FEM", "CAM", "PDM", "FMEA"], correct: 1 },
+    { question: "Was bedeutet das E in der folgenden Angabe? Angabe: Maße nach ISO 14405 E", answers: ["Hier gilt nur das Unabhängigkeitsprinzip nach DIN 8011.", "Hier gilt die Hüllbedingung.", "Hier können die Allgemeintoleranzen angewendet werden.", "Hier gilt die Maximum-Material-Bedingung.", "Hier gelten sämtliche betrieblichen Vorgaben."], correct: 1 },
+    { question: "Welche Antwort trifft auf ein Patent zu?", answers: ["Ein Patent ist ein hoheitlich erteiltes gewerbliches Schutzrecht für eine Erfindung.", "Ein Patent kann nur vom Firmengründer beantragt werden.", "Ein Patent gilt für die Lebensdauer des Produktlebenszyklus.", "Ein Patent wird von der Patentbehörde beantragt.", "Ein Patent hat eine Gültigkeit von 5 Jahren."], correct: 0 },
+    { question: "Welcher Oberflächen-Rauheitswert wird für die Oberfläche einer Bohrung mit einem Durchmesser Ø 20H7 empfohlen?", answers: ["Ra 0,4", "Ra 0,8", "Ra 1,6", "Ra 3,2", "Ra 6,3"], correct: 1 },
+    { question: "Welche der genannten Eigenschaften trifft auf Wälzlager zu?", answers: ["Unempfindlich gegen Stöße", "Geringes Anlaufmoment", "Gute Notlaufeigenschaften", "Unbegrenzte Lebensdauer", "Hoher Wartungsaufwand"], correct: 4 },
+    { question: "Achsen und Wellen werden in den Technik unterschieden. Welche Aussage ist richtig?", answers: ["Achsen übertragen Drehmomente und werden nie auf Biegung beansprucht.", "Wellen nehmen Kräfte auf und sind für Torsionskräfte nicht geeignet.", "Achsen und Wellen übertragen Kräfte und sind immer aus gehärtetem Material.", "Wellen übertragen Drehmomente.", "Achsen und Wellen werden anhand ihres Durchmessers unterschieden."], correct: 3 },
+    { question: "Welches der aufgeführten Produkte enthält als Bauteil eine Schenkelfeder?", answers: ["Kugelschreiber", "Sicherheitsnadel", "Stoßdämpfer", "Fliehkraftkupplung", "Bügelverschluss (Bierflasche)"], correct: 4 },
+    { question: "Welche Auswahlantwort trifft für Keramik zu?", answers: ["Keramik ist ein anorganischer nichtmetallischer Werkstoff.", "Keramik ist ein organischer nichtmetallischer Werkstoff.", "Keramik ist ein Naturwerkstoff.", "Keramik ist ein synthetischer elastischer Werkstoff.", "Keramik ist ein Verbundwerkstoff."], correct: 0 },
+    { question: "Zwischen welchen Werkstoffkennwerten des Spannungs-Dehnungsdiagramms liegt der Umformbereich eines Werkstoffs?", answers: ["Rm – A", "Rp – Rm", "Hookesche Gerade – Re", "Untere Streckgrenze – obere Streckgrenze", "Re – A"], correct: 1 },
+    { question: "Welcher Werkstoff ist ein Polyblend?", answers: ["FKM", "PUR", "PF", "EPDM", "ABS"], correct: 4 },
+    { question: "Welche Werkstoffeigenschaft wird durch das Anlassen verbessert?", answers: ["Schweißbarkeit", "Kaltumformbarkeit", "Zerspanbarkeit", "Zähigkeit", "Oberflächenqualität"], correct: 3 },
+    { question: "Welche der Eigenschaften/Merkmale von Einscheibensicherheitsglas (ESG) trifft zu?", answers: ["ESG ist ungehärtetes Flachglas (Floatglas).", "Es ist gut nachbearbeitbar, z. B. durch Bohren.", "Bei Zerbrechen zerfällt es in unzählig viele kleine Glaswürfel.", "Es ist nur für den Innenbereich geeignet.", "Es besitzt eine geringere Stoß- und Schlagfestigkeit gegenüber von Flachglas (Floatglas)."], correct: 2 },
+    { question: "Welches Oberflächenbeschichtungsverfahren ist bei Vollholzmöbeln einsetzbar (möglich)?", answers: ["Ölen", "Elektrotauchlackieren", "Pulverbeschichten", "Verzinken", "Emaillieren"], correct: 0 },
+    { question: "In welcher Antwort befinden sich nur Tropenhölzer?", answers: ["Balsaholz, Palisander, Lärche", "Meranti, Mahagoni, Teak", "Balsaholz, Palisander, Fichte", "Ramin, Afzelia, Buche", "Rotbuche, Hainbuche, Afzelia"], correct: 1 },
+    { question: "Welche Aussage zur Gestaltung von Klebeverbindungen ist korrekt?", answers: ["Klebeflächen sollen vorzugsweise auf Abschälung beansprucht werden.", "Klebeflächen sollen vorzugsweise auf Biegung beansprucht werden.", "Klebeflächen sollen vorzugsweise auf Zug beansprucht werden.", "Klebeflächen sollen vorzugsweise auf Torsion beansprucht werden.", "Klebeflächen sollen vorzugsweise auf Abscherung beansprucht werden."], correct: 4 },
+    { question: "Welche Antwort zur Gestaltung von Gussteilen ist richtig?", answers: ["Materialanhäufungen erhöhen die Stabilität", "Für kleine Bohrungen und kleinste Innenräume Kerne vorsehen", "Gussspannungen durch gleiche Wandstärken vermeiden", "Keine Formteilung berücksichtigen", "Schwindmaß < 2 % wird nicht berücksichtigt"], correct: 2 },
+    { question: "Freiformflächen sind bei der Erstellung optisch ansprechender Teile eine wichtige Gestaltungsmöglichkeit. Welche Antwort ist richtig?", answers: ["Freiformflächen sind Flächen, die nicht durch Kombination einfacher geometrischer Körper entstehen können.", "Freiformflächen sind Flächen, die durch Kombination einfacher geometrischer Körper entstehen können.", "Freiformflächen sind mit modernen CAD-Systemen nur mit hohem Aufwand zu erzeugen.", "Freiformflächen sind Flächen, die nur durch Formenbau von Hand hergestellt werden.", "Freiformflächen sind Flächen, die nur durch Abscannen von Objekten entstehen können."], correct: 1 },
+    { question: "Welches Längen-Seitenverhältnis trifft annähernd den „Goldenen Schnitt“?", answers: ["1 zu 10", "2 zu 2", "2 zu 5", "1 zu 1,6", "1 zu 20"], correct: 3 },
+    { question: "Welche Reihenfolge entspricht in den Grundzügen dem Ablauf einer Zertifizierung?", answers: ["Systemanalyse – Voraudit – Zertifizierungsaudit – Zertifikat", "Voraudit – Angebot – Auditbericht – Zertifikat", "Auditbericht – Zertifizierung – Systemanalyse – Zertifikat", "Systemanalyse – Überwachungsaudit – Voraudit – Zertifikat", "Zertifizierungsaudit – Systemanalyse – Auditbericht – Zertifikat"], correct: 0 },
+    { question: "Welches Kriterium wird u. a. in einem Prozessaudit untersucht?", answers: ["Vergleich zwischen Abweichungen und den Vorgaben", "Beurteilung der eigenen Leistungen", "Beurteilung der Fähigkeit eines Unternehmens", "Aufzeigen von Verbesserungsmöglichkeiten", "Beurteilung des gesamten QM-Systems eines Unternehmens"], correct: 0 },
+    { question: "Welche Antwort enthält nur Aussagen mit qualitativen Qualitätsmerkmalen?", answers: ["Länge der Platine 70 mm; Rautiefe < 16 µm", "Lackierung i. O., alle Bohrungsdurchmesser 8+0,2 mm", "Farbabweichungen n. i. O., Muster o.k.", "Stückzahl < 250, Masse < 25 g", "Konzentration < 20 %, Farbe i. O."], correct: 2 },
+    { question: "Wer ist verantwortlich für die Qualität des Produkts in einem Unternehmen?", answers: ["Alle Mitarbeiter des Unternehmens", "Interner Auditor", "Qualitätsmanagementbeauftragter", "Qualitätskontrolle", "Projektleiter"], correct: 0 },
+    { question: "Welche Aussage trifft auf jeden Fall auf das Mindmapping zu?", answers: ["Darstellung komplexer Entscheidungslogiken", "Gewichtung von Objekten nach ihrer Wichtigkeit", "Strukturierte Darstellung zusammenhängender Begriffe", "Überblick über Teilfunktionen eines Systems", "Bewertung und Vergleichbarkeit von Lösungen"], correct: 2 },
+    { question: "Welches Element ist in einem Netzplan für ein Projekt enthalten?", answers: ["Projektziele", "Arbeitspakete", "Projektprotokolle", "Projektaufträge", "Risikoanalysen"], correct: 1 },
+    { question: "Ein Netzplan stellt den Zusammenhang zwischen den Aufgaben entsprechend den Meilensteinen sowie dem Zeitbedarf für die einzelnen Aufgaben dar. Was versteht man unter dem Begriff „kritischer Pfad“?", answers: ["Der kritische Pfad bedeutet, dass immer beobachtet wird, ob jeder richtig mitarbeitet.", "Der kritische Pfad ist ein Pfad, bei dem sich der Fertigstellungstermin nicht halten lässt, wenn eine Aufgabe länger dauert.", "Der kritische Pfad ist ein Pfad, bei dem zu viele Zeitpuffer eingeplant sind.", "Der kritische Pfad ist der, bei dem die schwierigsten Aufgaben zu lösen sind.", "Der kritische Pfad ist ein Begriff im Gantt-Diagramm."], correct: 1 },
+    { question: "Welche Aussage zu Kernholz (innen) und Splintholz (außen) ist richtig?", answers: ["Kernholz und Splintholz haben immer die gleiche Farbe.", "Das Kernholz hat andere Eigenschaften als das Splintholz.", "Die Festigkeit ist unabhängig von der Breite der Jahresringe und dem Auftreten von Ästen.", "Es gibt keinen Unterschied zwischen den beiden Holzarten.", "Kernholz wird ausschließlich für Furnier verarbeitet."], correct: 1 },
+    { question: "Ein gesuchter Werkstoff hat eine geringe Dichte, ist gut umformbar, witterungsbeständig, korrosionsbeständig, schweißbar und gießbar. Auf welchen Werkstoff trifft diese Beschreibung zu?", answers: ["PUR", "CuZn36Pb3", "EP", "Al Mg3", "GX4CrNiMo16-5-1"], correct: 3 },
+    { question: "Nach welchen Verfahren werden Kunststoffe hergestellt?", answers: ["Härten, Vernetzen, Beschleunigen", "Polymerisieren, Polykondensieren, Polyaddieren", "Aufbereiten, Schmelzen, Extrudieren", "Filtrieren, Mischen, Verdichten", "Veredeln, Verzweigen, Verstärken"], correct: 1 },
+    { question: "Im Zugversuch werden runde und flache Zugproben eingespannt und auf Zug beansprucht. Welche Art der Verformung der Zugprobe stimmt mit dem zugeordneten Kennwert überein?", answers: ["Beginnende Verlängerung – Eintritt der plastischen Verformung, Streckgrenze", "Beginnende Verlängerung ohne Einschnürung – Mindestzugfestigkeit", "Beginnende Einschnürung – Bruchdehnung", "Bruch – Mindestzugfestigkeit", "Beginnende Einschnürung – Mindeststreckgrenze"], correct: 0 },
+    { question: "Welche der genannten Eigenschaften ist typisch für Schaumstoffe?", answers: ["Hohe Eigenspannung", "Guter Wärmeleiter", "Hohe Dichte", "Hohe Festigkeit", "Gute Isoliereigenschaften"], correct: 4 },
+    { question: "Mit welchem Verfahren wird die größte Eindringtiefe des Imprägniermittels in Holzwerkstoffen erreicht?", answers: ["Tauchverfahren", "Kesseldruckverfahren", "Spritzverfahren", "Anstrichverfahren", "Walzverfahren"], correct: 1 },
+    { question: "Welches Gestaltelement an mechanisch beanspruchten Drehteilen (Wellen) ist am besten geeignet, einer Kerbwirkung entgegenzuwirken?", answers: ["Fase", "Nut", "Freistich", "Zentrierbohrung", "Absatz"], correct: 0 },
+    { question: "Welche Aussage über „Tailored Blanks“ ist richtig?", answers: ["Das sind vorgefertigte Rohre.", "Das sind stranggepresste Profile.", "Das sind Bleche mit unterschiedlichen Dicken.", "Das sind geschmiedete Halbzeuge.", "Das sind Lochbleche."], correct: 2 },
+    { question: "Welche der aufgeführten konstruktiven Gestaltungsmöglichkeiten dient der Vermeidung von Korrosion?", answers: ["Raue Oberflächen vorsehen", "Zusammengesetzte Profile verwenden", "Kondensatbildung fördern", "Spalte abdichten", "An Kontaktstellen möglichst unterschiedliche Metalle kombinieren"], correct: 3 },
+    { question: "In einer Entwurfsskizze soll das Wesentliche hervorgehoben werden. Welche Aussage ist richtig?", answers: ["Das Wesentliche liegt niemals im Mittelpunkt der Darstellung.", "Das Wesentliche soll durch helle Farben betont werden.", "Unwesentliches soll farblich gekennzeichnet werden.", "Skizzen werden durch verkleinerte Details ergänzt.", "Betonung kann durch Farbe oder Schraffur erfolgen."], correct: 4 },
+    { question: "Welche Bedeutung hat die Abkürzung „PDCA“?", answers: ["Plan-Do-Check-Analyse", "Plan-Do-Check-Act", "Plan-Demand-Check-Act", "Plan-Do-Change-Act", "Personal-Document-Check-Act"], correct: 1 },
+    { question: "Welche Tätigkeit wird in der ersten Phase von QFD durchgeführt?", answers: ["Die Kundenwünsche in Produktmerkmale überführen", "Die Designvorgaben bestimmen und in Prozessplanungsparameter überführen", "Entwicklungsspezifikationen ermitteln", "Qualitätsfehler vermeiden", "Die qualitätsbezogenen Kosten definieren"], correct: 0 },
+    { question: "Durch welche der aufgeführten Methoden lassen sich Fehler bereits in der Planungs-/Entwurfsphase einer Produktentwicklung erkennen und vermeiden?", answers: ["Six Sigma", "FMEA", "Pareto-Analyse", "QFD", "Ishikawa-Diagramm"], correct: 1 },
+    { question: "Welcher Begriff kennzeichnet das Ziel eines Benchmarkings?", answers: ["Best prohibition", "Best promotion", "Best practice", "Best projection", "Best protection"], correct: 2 },
+    { question: "Welchen Nutzen bringt die Definition von Meilensteinen innerhalb der Projektplanung?", answers: ["Projektablauf wird verkürzt", "Projektstatus wird überprüft", "Projektziele werden korrigiert", "Projektressourcen werden angepasst", "Projektabschluss wird gesichert"], correct: 1 },
+    { question: "Welche Projektziele sind in dem sogenannten „magischen Dreieck“ aufgeführt?", answers: ["Qualität, Umwelt, Maschinen", "Zeit, Management, Qualität", "Kosten, Zeit, Qualität", "Mensch, Maschine, Umwelt", "Team, Ziele, Rendite"], correct: 2 },
+    { question: "Innerhalb eines Entwicklungsprozesses muss der Projektfortschritt regelmäßig kontrolliert werden. Mithilfe welcher Maßnahme kann das geschehen?", answers: ["Status-Vorhersage", "Soll-Ist-Vergleich", "Kostenentwicklung", "Ressourcenauslastung", "Gesprächsprotokoll"], correct: 1 },
+    { question: "Wie kann man Produktneuentwicklungen vor der Serienreife überprüfen?", answers: ["Mithilfe eines Prototyps", "Befragung von Kunden mit Erstserienteilen", "Durch Kundenbewertungen im Internet", "Zusammenfassung von Erstmusterprüfbericht", "Fragebogen an Kunden nach Markteinführung"], correct: 0 },
+    { question: "Welche Aussage zu einem Patent ist korrekt?", answers: ["Ein Patent kann nur einen Inhaber haben.", "Ein Patent wird zeitlich unbefristet erteilt.", "Ein Patent ist ein kostenloses Schutzrecht.", "Inhaber des Patents ist immer ein Unternehmen.", "Der Inhaber des Patents ist berechtigt, anderen die Nutzung der Erfindung zu untersagen."], correct: 4 },
+    { question: "Welche Konstruktionsart wird nachfolgend beschrieben? - Verändern von Größe und/oder Anordnung innerhalb der Grenzen vorgeschädigter Systeme - Funktion, Löseprinzip und Gestaltung bleiben im Wesentlichen erhalten", answers: ["Neukonstruktion", "Anpassungskonstruktion", "Variantenkonstruktion", "Änderungskonstruktion", "Konstruktionsmethodik"], correct: 1 },
+    { question: "Welche Antwort steht für eine soziale Kompetenz?", answers: ["Pünktlichkeit", "Zuverlässigkeit", "Verbindlichkeit", "Empathie", "Problemlösungskompetenz"], correct: 3 },
+    { question: "Welche Aussage über den Wirkungsgrad ist richtig?", answers: ["Der Wirkungsgrad ist die Differenz zwischen zugeführter und abgegebener Leistung.", "Der Wirkungsgrad ist das Verhältnis von zugeführter zu abgegebener Leistung.", "Der Wirkungsgrad ist das Verhältnis von Klemmenspannung zur Betriebsspannung.", "Der Wirkungsgrad ist das Verhältnis von abgegebener zu zugeführter Leistung.", "Der Wirkungsgrad ist das Verhältnis von Wirkleistung zu Scheinleistung."], correct: 3 },
+    { question: "Was besagt das Unabhängigkeitsprinzip (EN ISO 8015)?", answers: ["Das gefertigte Formelement muss innerhalb der geometrisch idealen Hülle liegen.", "Das gefertigte Formelement muss außerhalb der geometrisch idealen Hülle liegen.", "Maß-, Form-, Lage- und Oberflächentoleranzen sind jeweils unabhängig voneinander zu betrachten.", "Maß-, Form-, Lage- und Oberflächentoleranzen sind jeweils abhängig voneinander zu betrachten.", "Das gefertigte Formelement muss außerhalb der geometrischen Gesamthülle liegen."], correct: 2 },
+    { question: "Welche Aussage zum Begriff „Lasur“ ist korrekt?", answers: ["Eine Lasur ist eine lösungsmittelfreie, geruchsneutrale Schutzschicht, die auf das Holz aufgebracht wird.", "Eine Lasur ist eine transparente oder semitransparente Beschichtung z. B. auf Holz.", "Eine Lasur ist ein farbloser Anstrich ausschließlich für Tropenhölzer.", "Eine Lasur wird stets in mehreren Schichten aufgetragen.", "Eine Lasur ist ausschließlich für den Innenbereich geeignet."], correct: 1 },
+    { question: "Bei welcher Antwort passen die Art der Kupplung und ihre jeweilige Eigenschaft zusammen?", answers: ["Scheibenkupplung - schaltbar", "Klauenkupplung - schaltbar", "Gummilamellenkupplung - starr", "Lamellenkupplung - nicht schaltbar", "Schalenkupplung - elastisch"], correct: 1 },
+    { question: "Welche Baugruppe dient dem Übertragen des Drehmoments bei einer Säulenbohrmaschine?", answers: ["Elektromotor", "Bohrspindellagerung", "Maschinentisch", "Riementrieb", "Steuerung"], correct: 3 },
+    { question: "Welche Lagerart eignet sich für die Aufnahme hoher einseitiger axialer Kräfte?", answers: ["Kegelrollenlager", "Nadellager", "Zylinderrollenlager", "Pendelkugellager", "Tonnenlager"], correct: 0 },
+    { question: "Welche Aussage zu Brettschichtholz ist richtig?", answers: ["Brettschichtholz wird bei statischen Belastungen eingesetzt.", "Brettschichtholz ist im Vergleich zu Fichtenholz ein sehr günstiger Werkstoff.", "Brettschichtholz wächst nur im Tropenwald.", "Brettschichtholz ist rissenempfindlicher als Vollholz.", "Brettschichtholz ist sehr instabil im Vergleich zum Vollholz."], correct: 0 },
+    { question: "Mit welchem Verfahren ist es möglich, hochfeste Werkstücke ohne größeren Materialverlust herzustellen?", answers: ["Läppen", "Drehen", "Gesenkschmieden", "Honen", "Hobeln"], correct: 2 },
+    { question: "Welche Faktoren führen zu einer wachsenden Bedeutung von additiven Fertigungsverfahren?", answers: ["Wachsende Teilevielfalt bei abnehmender Losgröße", "Abnehmende Teilevielfalt bei abnehmender Teilegröße", "Wachsende Teilevielfalt bei wachsender Teilegröße", "Abnehmende Teilevielfalt bei zunehmender Losgröße", "Wachsende Teilevielfalt bei zunehmender Losgröße"], correct: 0 },
+    { question: "Welches Verfahren gehört entsprechend DIN 8580 zur Hauptgruppe „Stoffeigenschaften ändern“?", answers: ["Lackieren", "Galvanisieren", "Wirbelsintern", "Nitrieren", "Pulverbeschichten"], correct: 3 },
+    { question: "Welche Aussage über Umformen ist richtig?", answers: ["Veränderte Festigkeit gegenüber dem Ausgangszustand", "Jeder Werkstoff ist umformbar.", "Geringe Maß- und Formgenauigkeit", "Umformen erfolgt im elastischen Bereich eines Werkstoffs.", "Hoher Werkstoffverlust"], correct: 0 },
+    { question: "Welche Antwort über stoffschlüssige Verbindungen ist richtig?", answers: ["Stoffschlüssige Verbindungen können jederzeit gelöst werden.", "Stoffschlüssige Verbindungen sind ausschließlich für Kunststoffe geeignet.", "Stoffschlüssige Verbindungen sind z. B. Schweißen, Fräsen, Löten.", "Stoffschlüssige Verbindungen sind nur mit Aluminium möglich.", "Stoffschlüssige Verbindungen weisen meist eine hohe Festigkeit auf."], correct: 4 },
+    { question: "Welches Merkmal trifft auf den Werkstoff Buche zu?", answers: ["Buche ist ein Weichholz.", "Buche ist mechanisch wenig belastbar.", "Buche ist ein Nadelholz.", "Buche ist wenig witterungsbeständig.", "Buche ist ein Tropenholz."], correct: 3 },
+    { question: "Welches Legierungselement verbessert die Schweißbarkeit eines Stahls?", answers: ["Mangan", "Molybdän", "Chrom", "Nickel", "Vanadium"], correct: 0 },
+    { question: "Which test method can be used to determine the elongation at break A (in %) of a material?", answers: ["Shear test", "Notched-bar impact bending test", "Hardness test", "Tensile test", "Bending test"], correct: 3 },
+    { question: "Welche Merkmale treffen auf Nickel zu?", answers: ["Farbe grau, matt, magnetisch", "Nicht korrosionsbeständig, gut schweißbar, sehr zäh", "Stark glänzend, magnetisch, wichtiges Legierungselement", "Nicht schweißbar, nicht magnetisch, zäh", "Geringe Dichte, hohe Härte, matt"], correct: 2 },
+    { question: "Welcher der aufgeführten Kunststoffe ist am besten für den Einsatz bei Gleitlagern geeignet?", answers: ["Polystyrol", "Fluor-Kautschuk", "PVC-P", "PE", "PA6"], correct: 4 },
+    { question: "Welche Gesamthöhe sollte ein Standard-Esstisch haben?", answers: ["650 mm – 700 mm", "720 mm – 750 mm", "760 mm – 780 mm", "790 mm – 800 mm", "810 mm – 830 mm"], correct: 1 },
+    { question: "Das System 32 ist ein Möbelkonstruktions- und Fertigungsprinzip bei der Herstellung von zerlegbaren Möbeln. Welche Antwort trifft zu?", answers: ["Höhe des Möbels immer durch Faktor 32 teilbar", "32 verschiedene Systemvarianten", "Abstand der Bohrungen in der Lochreihe = 32 mm", "Breite des Möbels immer durch Faktor 32 teilbar", "Abstand der Lochreihenbohrung von der Außenkante = 32 mm"], correct: 2 },
+    { question: "Welches Merkmal muss bei der ergonomiegerechten Gestaltung eines Produkts berücksichtigt werden?", answers: ["Herstellkosten", "Stabilität", "Wiederverwendung", "Kraftaufwand", "Wartungsfreiheit"], correct: 3 },
+    { question: "Welche Antwort über die Gestaltung eines Bauteils ist richtig?", answers: ["Bei auf Zug beanspruchten Bauteilen ist die Querschnittsform entscheidend für die Belastung.", "Bei auf Zug beanspruchten Bauteilen ist die Querschnittsfläche entscheidend für die Belastung.", "Auf Biegung beanspruchte Bauteile immer aus Vollmaterial gestalten.", "Torsionsbeanspruchte Bauteile als offene Hohlprofile gestalten.", "Schubbeanspruchte Bauteile sollen nach Möglichkeit in der Randzone viel Material haben."], correct: 1 },
+    { question: "Was muss bei der Konstruktion von Kunststoffspritzgussteilen beachtet werden?", answers: ["Möglichst dicke Wandstärken", "Möglichst große ebene Flächen", "Hinterschneidungen vermeiden", "Scharfkantige Bauteile ohne Radien", "Entformungsschräge > 10°"], correct: 2 },
+    { question: "Welches Werkzeug des Qualitätsmanagements hilft als Paarvergleich bei Entscheidungsfindungen?", answers: ["Matrixdiagramm", "Flussdiagramm", "Ursache-Wirkungs-Diagramm", "Baumdiagramm", "Histogramm"], correct: 0 },
+    { question: "Welches Instrument dient zur systematischen Ermittlung von Kundenanforderungen in der Produktentwicklung?", answers: ["House of Quality", "Audit", "TQM", "Kaizen", "Qualitätsregelkarte"], correct: 0 },
+    { question: "Was gehört zu den Aufgaben eines Audits?", answers: ["Korrekturmaßnahmen erläutern", "Prozessabläufe beobachten", "Produktion erhöhen", "Mitarbeitereinsatz planen", "Ressourcen organisieren"], correct: 1 },
+    { question: "Was ist ein Ziel der Produkt-FMEA?", answers: ["Produktfehler bewerten", "Stückzahlenplanung erstellen", "Betriebsmittel beschaffen", "Target Costing überprüfen", "Akzeptanztest vermeiden"], correct: 0 },
+    { question: "In welcher Antwort entspricht die Reihenfolge einem klassischen Teamentwicklungsprozess?", answers: ["Abschlussphase – Konfliktphase – Formierungsphase", "Formierungsphase – Abschlussphase – Leistungsphase", "Leistungsphase – Formierungsphase – Abschlussphase", "Formierungsphase – Leistungsphase – Abschlussphase", "Konfliktphase – Formierungsphase – Abschlussphase"], correct: 4 },
+    { question: "Welches Merkmal ist als technisches Risiko im Rahmen eines Projekts einzustufen?", answers: ["Eine neue Fügetechnik ist noch nicht erprobt", "Ausfall von Mitarbeitern", "Lieferverzögerungen durch klimatische Einflüsse", "Zahlungsunfähigkeit eines Kunden", "Die Gesetzgebung ändert sich"], correct: 0 },
+    { question: "In welcher Antwort zum Produktlebenszyklus ist der Begriff korrekt beschrieben?", answers: ["Einführungsphase: Stückkosten sehr gering, weil nicht genug abgesetzt wird", "Wachstumsphase: Es werden größere Stückzahlen umgesetzt, der Gewinn steigt", "Reifephase: Stückkosten sehr hoch, weil noch nicht genug abgesetzt wird", "Sättigungsphase: Ende der Phase = Break Even", "Entsorgungsphase: Gewinnmaximierung"], correct: 1 },
+    { question: "Sie haben einen Berufsabschluss in der Bundesrepublik Deutschland erworben. Was gilt für die Anerkennung in anderen Staaten der Europäischen Union (EU)?", answers: ["Der Abschluss wird automatisch anerkannt.", "Die Anerkennung ist abhängig vom Beruf.", "Der Abschluss wird anerkannt, wenn eine beglaubigte Übersetzung vorliegt.", "Der Abschluss wird nicht anerkannt.", "Eine Anerkennung ist nicht nötig."], correct: 1 },
+    { question: "Welche Aussage entspricht dem Arbeitszeitgesetz (ArbZG)?", answers: ["Arbeitszeit ist die Zeit vom Beginn bis zum Ende der Arbeit einschließlich Ruhepausen.", "Die regelmäßige tägliche Arbeitszeit darf 8,5 Stunden nicht überschreiten.", "Bei einer Arbeitszeit von mehr als sechs Stunden ist eine Ruhepause von mindestens 15 Minuten zu gewähren.", "Für geleistete Mehrarbeit ist ein Zuschlag von 15 Prozent der regelmäßigen Vergütung zu zahlen.", "Die Einhaltung des Arbeitszeitgesetzes wird geprüft durch die für die Gewerbeaufsicht zuständige Behörde."], correct: 0 },
+    { question: "In welchem Fall erhält eine Arbeitnehmerin einen Zeitlohn?", answers: ["Sie erhält für jedes gefertigte Werkstück einen bestimmten Geldbetrag.", "Sie erhält für jedes gefertigte Werkstück die benötigte Zeit gutgeschrieben.", "Sie erhält für jede Arbeitsstunde einen bestimmten Geldbetrag.", "Sie erhält einen Grundlohn und für jedes gefertigte Werkstück zusätzlich einen Geldbetrag.", "Sie erhält zu Weihnachten eine einmalige Geldzuwendung."], correct: 2 },
+    { question: "Wofür tritt der Deutsche Gewerkschaftsbund (DGB) unter anderem ein?", answers: ["Gleichstellung von Leiharbeitnehmern mit der Stammbelegschaft eines Unternehmens", "Auflösung der Arbeitgeberverbände", "Abschaffung der Überstundenzuschläge", "Verlängerung der Wochenarbeitszeit", "Ausweitung der Sonn- und Feiertagsarbeit"], correct: 0 },
+    { question: "Welche Behauptung über die Tarifverträge ist richtig?", answers: ["Tarifverträge werden von den Tarifvertragsparteien grundsätzlich nur für ihre Mitglieder abgeschlossen. Eine Anwendung auf Nichtorganisierte ist untersagt.", "Die Mitglieder der Tarifvertragsparteien sind Tarifgebunden.", "Nicht zulässig sind Öffnungsklauseln, die es Betrieben ermöglichen, in wirtschaftlichen Nöten, von tarifvertraglichen Regelungen abzuweichen.", "In Tarifverträgen werden grundsätzlich nur Entgeltfragen geregelt.", "Der Bundespräsident kann Tarifverträge für ganz Deutschland als allgemeinverbindlich erklären."], correct: 1 },
+    { question: "Durch den neuen Entgelttarifvertrag erhöht sich das Nettoarbeitsentgelt einer Arbeitnehmerin um 3,0 Prozent. Die Preissteigerungsrate der Volkswirtschaft beträgt 2,0 Prozent. Welche Auswirkungen hat das auf den Reallohn?", answers: ["Der Reallohn sinkt um 1,0 Prozent.", "Der Reallohn bleibt gleich.", "Der Reallohn steigt um 1,0 Prozent.", "Der Reallohn steigt um 3,0 Prozent.", "Der Reallohn steigt um 5,0 Prozent."], correct: 2 },
+    { question: "In welchem Fall handelt es sich um eine Maßnahme der beruflichen Fortbildung?", answers: ["Ein Automobilclub führt ein Fahrsicherheitstraining für Auszubildende durch.", "Das Berufsbildungswerk des DGB führt für Industriekaufleute einen Lehrgang in Informationstechnik durch.", "Eine IHK führt in ihrer überbetrieblichen Ausbildungsstätte für Auszubildende einen zweiwöchigen CAD-Lehrgang durch.", "Die Gewerkschaft führt ein Seminar für neu gewählte Betriebsräte durch.", "Eine Berufsschule führt einen Englischkurs zum Erwerb des mittleren Bildungsabschlusses durch."], correct: 1 },
+    { question: "In welchem Fall wird der Produktionsfaktor Arbeit teilautomatisch durch den Faktor Kapital ersetzt?", answers: ["Ein Unternehmen erhöht das Betriebskapital zur Schaffung neuer Arbeitsplätze.", "Die Bandgeschwindigkeit wird erhöht und bringt ein höheres Produktionsergebnis.", "Durch Lohnerhöhung wird für den Produktionsprozess ein höherer Kapitalaufwand erforderlich.", "Durch Einführung der Schichtarbeit können die vorhandenen Produktionsanlagen besser ausgenutzt werden.", "Die Produktion am Fließband wird durch Automation abgelöst."], correct: 4 },
+    { question: "Der 16-jährige Hans F. kauft eine Hi-Fi-Anlage im Wert von 2500 EUR. Welche Aussage über diesen Kaufvertrag ist richtig?", answers: ["Der Kaufvertrag ist rechtsgültig.", "Der Kaufvertrag ist nur bei Zustimmung des gesetzlichen Vertreters gültig.", "Der Kaufvertrag ist nichtig.", "Der Kaufvertrag ruht, bis Hans F. volljährig ist.", "Der Kaufvertrag muss schriftlich abgeschlossen werden."], correct: 1 },
+    { question: "Was bedeutet in einem Kaufvertrag der Vermerk „frei Haus“?", answers: ["Der Käufer trägt das komplette Transportrisiko.", "Der Käufer holt die Ware ab Werk ab.", "Der Verkäufer übernimmt die Transportkosten.", "Der Käufer zahlt die Lieferung.", "Der Käufer bezahlt die Verpackungskosten."], correct: 2 },
+    { question: "Ein Kunde holt eine bestellte Ware nicht rechtzeitig beim Lieferanten ab. Welche Vertragsstörung liegt hier vor?", answers: ["Schlechtsleistung", "Zahlungsverzug", "Lieferungsverzug", "Annahmeverzug", "Schuldnerverzug"], correct: 3 },
+    { question: "Guntram Starke möchte sich selbstständig machen und gründet ein Stoffgeschäft als Einzelunternehmung. Unter welchem Namen kann er seine Firma ins Handelsregister eintragen lassen?", answers: ["Starke-Baustoffe", "Guntram Starke e.K.", "G. Starke Baubedarf", "Starke GbR", "Starke - Alles für den Bau"], correct: 1 },
+    { question: "Zahlreiche Betriebe werden nach dem Franchise-System geführt. Welche Aufgabe übernimmt der Franchise-Geber im Rahmen dieses Systems?", answers: ["Finanzierung des Verkaufsraums", "Anmeldung des Betriebs", "Einstellung des Personals", "Anmeldung der Beschäftigten bei der gesetzlichen Unfallversicherung", "Ausarbeitung der Marketingstrategie"], correct: 4 },
+    { question: "Ein Tischlermeister möchte sich selbstständig machen. Er entscheidet sich, eine gut gehende Tischlerei zu übernehmen, die aus Altersgründen verkauft wird. Welchen Vorteil hat die Übernahme für ihn?", answers: ["Der Tischlermeister benötigt kein Startkapital.", "Der Tischlermeister muss keine Beiträge zur Unfallversicherung zahlen.", "Die Tischlerei muss keine Gewerbesteuer zahlen.", "Die Tischlerei hat in jedem Fall Anspruch auf öffentliche Fördermittel.", "Die Tischlerei macht vom Tage der Übernahme an Umsatz."], correct: 4 },
+    { question: "In welcher Branche wirkt sich ein Exportrückgang am stärksten auf die Zahl der Beschäftigten in Deutschland aus?", answers: ["Textilindustrie", "Schuhindustrie", "Maschinenbau", "Bauindustrie", "Unterhaltungsindustrie"], correct: 2 },
+    { question: "Vom vorigen Arbeitgeber wurde für das laufende Kalenderjahr der gesamte Jahresurlaub gewährt. Wie viele Urlaubstage muss ihm der neue Arbeitgeber für den Rest des Jahres gewähren?", answers: ["0 Werktage", "2 Werktage", "3 Werktage", "4 Werktage", "5 Werktage"], correct: 0 },
+    { question: "Für welchen Fall gelten die Bestimmungen des Berufsbildungsgesetzes (BBiG)?", answers: ["Herr Müller wird zum Werkzeugmechaniker umgeschult.", "Herr Meier wird zum Polizisten ausgebildet.", "Frau Hader studiert nach dem Fachabitur Wirtschaftsinformatik.", "Frau Meißner belegt an der Volkshochschule einen Lehrgang in Gesprächsführung.", "Frau Fischer schließt die Ausbildung zur staatlich geprüften Rettungssanitäterin erfolgreich ab."], correct: 0 },
+    { question: "Paragraph 1 des Berufsbildungsgesetzes (BBiG) enthält folgenden Satz: „Die .... soll es ermöglichen, die berufliche Handlungsfähigkeit zu erhalten und auszubauen oder zu erweitern und beruflich aufzusteigen.“ Mit welchem Begriff muss die Lücke ausgefüllt werden?", answers: ["Berufsbildung", "Berufliche Fortbildung", "Berufsausbildungsvorbereitung", "Berufsorientierung", "Umschulung"], correct: 1 },
+    { question: "Welche der genannten Fragen wird im Betriebsverfassungsgesetz (BetrVG) beantwortet?", answers: ["Wer vertritt die Interessen der Arbeitnehmer im Betrieb?", "Unter welchen Voraussetzungen darf ein Arbeitgeber während eines Arbeitskampfs Arbeitnehmer aussperren?", "Wer ist zum Abschluss eines Tarifvertrags berechtigt?", "Welche Fragen muss ein Arbeitnehmer beim Einstellungsgespräch wahrheitsgemäß beantworten?", "Mit welchen Arbeiten dürfen Jugendliche im Betrieb nicht beschäftigt werden?"], correct: 0 },
+    { question: "Welcher Arbeitsschritt gehört zum Konzipieren von Bauteilen?", answers: ["Projektplan erstellen", "Machbarkeitsanalyse erstellen", "Pflichtenheft erarbeiten", "Wirkprinzip festlegen", "Fertigungsunterlagen erstellen"], correct: 2 },
+    { question: "Ein Kunde hat eine Frage zur Konstruktion. Welche Aussage entspricht einer einfachen Regel zur Kundenorientierung?", answers: ["Der Anrufer wird darauf hingewiesen, zu den üblichen Geschäftszeiten anzurufen.", "Der Anrufer wird zum nächsten freien Mitarbeiter durchgestellt.", "Der Anrufer wird zu einem kundigen Mitarbeiter durchgestellt.", "Der Anrufer bekommt den Hinweis, die Webseite des Unternehmens aufzurufen.", "Der Anrufer erhält die Antwort, den kundigen Mitarbeiter wieder anzurufen, sobald dieser Zeit hat."], correct: 2 },
+    { question: "Welches Ziel kann mit einer ABC-Analyse nicht erreicht werden?", answers: ["Trennung des Wichtigen von Unwichtigem", "Fokussierung auf Bereiche mit hohen Gewinnen", "Aufdeckung von Einsparmöglichkeiten", "Aufstellung einer Funktionsstruktur", "Reduzierung der Teilevielfalt in einem Unternehmen"], correct: 3 },
+    { question: "Welcher Vorgang gehört nicht zum Produktdatenmanagement?", answers: ["Verteilen von Daten", "Versionieren von Daten", "Regelung des Zugriffs auf Daten", "Speichern von Produktinformationen", "Verwalten von Software-Lizenzen"], correct: 4 },
+    { question: "Was bedeuten die folgenden Angaben in einer Zeichnung? Rz 63 / Rz 16", answers: ["Alle Oberflächen sind mit Rz 63 und Rz 16 herzustellen.", "Alle Oberflächen sind spanend herzustellen.", "Die meisten Oberflächen sind spanend herzustellen bis auf die Ausnahmen, die in Klammern stehen.", "Alle Oberflächen sind spanlos herzustellen bis auf die Ausnahmen in der Klammer.", "Alle spanend zu bearbeitenden Oberflächen haben einen Rz-Wert zwischen 63 und 16."], correct: 2 },
+    { question: "Was bedeutet die dargestellte Angabe? 256,06 (-0,1 / +0,3)", answers: ["Das Istmaß kann 256 mm betragen.", "Das Nennmaß kann 256,1 mm betragen.", "Das Höchstmaß beträgt 256,36 mm.", "Das Mindestmaß beträgt 256,36 mm.", "Das obere Abmaß beträgt 256,36 mm."], correct: 3 },
+    { question: "Welche Aussage trifft auf eine Schnappverbindung zu?", answers: ["Es ist ein kraftschlüssiges Verbindungsprinzip.", "Beide Verbindungselemente sind federnde Elemente.", "Es handelt sich grundsätzlich um lösbare Verbindungen.", "Sie bietet den Vorteil der schnellen und einfachen Fügbarkeit.", "Für Schnappverbindungen können nur Kunststoffe eingesetzt werden."], correct: 3 },
+    { question: "Welche Maßnahme dient zur Verminderung der Kerbwirkung?", answers: ["Nut", "Freistiche", "Zentrierbohrung", "Absatz", "Rändel"], correct: 1 },
+    { question: "Von welchen Größen hängt der elektrische Widerstand eines metallischen Leiters ab?", answers: ["Temperatur, Länge, Querschnittsfläche", "Stromstärke, Querschnittsfläche, Temperatur", "Querschnittsfläche, Länge, Leiterwerkstoff", "Spannung, Länge, Stromstärke, Querschnittsfläche", "Spezifischer Widerstand, Spannung, Leiterwerkstoff"], correct: 0 },
+    { question: "Bei welchem der genannten Gussverfahren werden komplizierte Werkstücke mit geringen Wandstärken maßgenau und mit hoher Festigkeit hergestellt? Häufig wird bei diesem Verfahren eine Zinklegierung verwendet.", answers: ["Handformen", "Druckgießen", "Vakuumformen", "Maschinenformen", "Maskenformen"], correct: 1 },
+    { question: "Welche der genannten Schraubensicherungen ist eine formschlüssige Schraubenverbindung?", answers: ["Glatter Federring", "Zahnscheibe", "Fächerscheibe", "Sicherungsblech", "Kontermutter"], correct: 3 },
+    { question: "Welches Verfahren gehört nicht zu den Rapid-Prototyping-Verfahren?", answers: ["Selektives Laserschmelzen", "Sintern", "Stereolithografie-Verfahren", "Selektives Lasersintern", "3D-Printing"], correct: 1 },
+    { question: "Welches der genannten Bauteile lässt sich durch Blasformen herstellen?", answers: ["Spülmittelflasche", "Handygehäuse", "Dichtung", "Armaturenbrett", "Dämmplatte"], correct: 0 },
+    { question: "Wozu verwendet man Blindfurniere?", answers: ["Zur Verbesserung der Oberfläche", "Zur Dekoration der Oberfläche", "Sie verbessern die Formstabilität", "Zum Furnieren der Möbelunterseite", "Als Kantenschutz an Tischplatten"], correct: 2 },
+    { question: "Welche Schnitte sind mit vertikalen Platten-Kreissägemaschinen nicht möglich?", answers: ["Horizontalschnitte", "Nutschnitte", "Einsetzschnitte", "Gehrungs-Schnitte", "Vertikalschnitte"], correct: 3 },
+    { question: "Welches der aufgeführten Metalle weist die geringste Dichte auf?", answers: ["Zink", "Kupfer", "Aluminium", "Titan", "Magnesium"], correct: 4 },
+    { question: "Welchen Kohlenstoffgehalt haben Einsatzstähle in der Regel vor dem Aufkohlen?", answers: ["0,5 bis 0,8 %", "0,9 bis 1,2 %", "0,2 bis 0,6 %", "0,1 bis 0,25 %", "1,2 bis 1,5 %"], correct: 3 },
+    { question: "Welcher Anwendungsbereich ist der Stahlsorte korrekt zugeordnet?", answers: ["Schnellarbeitsstahl – Blattfedern, Schraubenfedern", "Unlegierter Baustahl – Massendrehteile, gut spanend bearbeitbar", "Einsatzstähle – Nahrungsmittelindustrie, chemische Industrie", "Vergütungsstahl – Wellen, Zahnräder", "Austenitische Stähle – Schweißkonstruktionen im Stahl- und Maschinenbau"], correct: 3 },
+    { question: "Bei welchen der aufgeführten Holzarten sind im Radialschnitt die Holzstrahlen (Spiegel) besonders gut sichtbar?", answers: ["Eiche, Rotbuche", "Kiefer, Tanne", "Fichte, Pappel", "Weide, Lärche", "Weißbuche, Birnbaum"], correct: 0 },
+    { question: "In welche Richtung kann das Holz von Hand am leichtesten gesägt werden?", answers: ["Diagonal zur Faser", "Quer zur Faser", "Schräg gegen die Faser", "Längs mit der Faser", "Längs gegen die Faser"], correct: 3 },
+    { question: "Für welches Gestaltungselement braucht man bei Spritzgusswerkzeugen Schieber?", answers: ["Entformungsschräge", "Verschraubungsdom", "Hinterschneidungen", "Rundungen", "Rippen"], correct: 2 },
+    { question: "Von welchem Parameter hängt der kleinstmögliche Biegeradius eines Stahlblechteils nicht ab?", answers: ["Zugfestigkeit", "Temperatur", "E-Modul", "Faserverlauf", "Blechdicke"], correct: 3 },
+    { question: "Welches Formelement ist geeignet, sowohl die Stabilität eines Bauteils zu erhöhen als auch der Forderung nach konstanter Wandstärke nachzukommen?", answers: ["Entformungsschrägen", "Rundungen", "Rippen", "Neigungen", "Fasen"], correct: 2 },
+    { question: "Welche einfachen Grundregeln sollten bei der Konstruktion und Gestaltung von Schweißteilen nicht beachtet werden?", answers: ["Schweißstelle muss für Elektrode zugänglich sein", "Schweißen von spitzen Ecken vermeiden", "Einfache Grundkörper verwenden (z. B. Flachzeuge)", "Schweißnähte in gering beanspruchten Zonen vorsehen", "Nahtanhäufungen vorsehen"], correct: 4 },
+    { question: "Welcher Schritt steht am Anfang einer Zertifizierung?", answers: ["Auditieren aller Bereiche", "Erstellen eines QM-Handbuchs", "Analyse der Ausgangssituation", "Erstellung eines Auditberichts", "Schulung aller Mitarbeiter"], correct: 2 },
+    { question: "Welche Aussage in Bezug auf Kundenorientierung trifft nicht zu?", answers: ["Es ist teuer neue Kunden zu gewinnen als alte zu halten.", "Zufriedene Kunden kommen wieder.", "Verärgerte Kunden bleiben, wenn ihr Problem kurzfristig gelöst wird.", "Zufriedene Kunden sind besonders gute Werbeträger.", "Kunden kommen immer wieder, auch wenn man mit dem Preis nicht voll konkurrenzfähig ist."], correct: 2 },
+    { question: "Wer ist für die Verwirklichung der Qualitätsziele verantwortlich?", answers: ["Der Chef", "Der Vorgesetzte", "Der Kollege", "Die Qualitätskontrolle", "Jeder Mitarbeiter"], correct: 4 },
+    { question: "Welche Grundregel trifft auf die Praxis des kontinuierlichen Verbesserungsprozesses (KVP) zu?", answers: ["Fehler erst beheben, wenn man 100 %ig sicher ist", "Entscheidungen werden nur von Spezialisten getroffen", "KVP endet zu einem Termin", "Individuelle Ideen zählen vorrangig", "Keine Hindernisse fürchten"], correct: 4 },
+    { question: "Welche Aussage steht für ein Projektziel?", answers: ["Ein Projektziel beinhaltet eine Lösung.", "Ein Projektziel ist nicht eindeutig formuliert.", "Ein Projektziel ist auf die Zukunft hin ausgerichtet.", "Ein Projektziel beinhaltet den Lösungsweg.", "Ein Projektziel wird ohne Werte, also nicht messbar, formuliert."], correct: 0 },
+    { question: "Was beinhaltet ein Projektstrukturplan?", answers: ["Projektziele", "Meilensteine", "Projektmitarbeiter", "Projekttätigkeiten", "Ressourcen"], correct: 3 },
+    { question: "Was versteht man unter dem Begriff „Kundenzufriedenheit“?", answers: ["Wenn der Kunde eine höhere Stückzahl des Produkts benötigt", "Die Kundenwünsche sind nicht erfüllt", "Wenn der Kunde mit seinem Arbeitsplatz zufrieden ist", "Der Kunde findet den Preis des Produkts zu hoch", "Wahrnehmung des Kunden zu dem Grad, in dem seine Anforderungen erfüllt worden sind"], correct: 4 }
+];
+
+// 2. Die neuen AI-Fragen (Expertenmodus), inklusive Bildfragen
+const aiQuestions = [
+    {
+        question: "Welches Symbol der Form- und Lagetoleranz ist hier abstrahiert dargestellt (Kreis)?",
+        answers: [
+            "Rundheit",
+            "Zylinderform",
+            "Position",
+            "Konzentrizität",
+            "Ebenheit"
+        ],
+        correct: 0,
+        category: "Experte: Normung",
+        image: svgGDT
+    },
+    {
+        question: "Betrachten Sie die Vorderansicht des L-Stücks. Welche Darstellung der Seitenansicht (von links) wäre korrekt (verdeckte Kanten)?",
+        answers: [
+            "Ein Rechteck ohne Linien",
+            "Ein Rechteck mit einer durchgezogenen Linie in der Mitte",
+            "Ein Rechteck mit einer gestrichelten Linie (verdeckte Kante) auf Höhe des Absatzes",
+            "Zwei getrennte Quadrate",
+            "Ein Kreis"
+        ],
+        correct: 2,
+        category: "Experte: Zeichnen",
+        image: svgProj
+    },
+    {
+        question: "Was versteht man unter dem Begriff 'Hüllbedingung' (Symbol E im Kreis)?",
+        answers: [
+            "Das Bauteil muss verpackt werden.",
+            "Die geometrische Form darf das theoretisch genaue Maß des Maximum-Material-Zustands nicht überschreiten.",
+            "Es gilt nur das Unabhängigkeitsprinzip.",
+            "Oberflächen müssen beschichtet werden.",
+            "Toleranzen gelten nur für die Hülle."
+        ],
+        correct: 1,
+        category: "Experte: GD&T"
+    },
+    {
+        question: "Welches G-Code Befehl steht beim CNC-Fräsen typischerweise für 'Eilgang' (schnelle Bewegung ohne Bearbeitung)?",
+        answers: [
+            "G01",
+            "G00",
+            "G02",
+            "M03",
+            "M08"
+        ],
+        correct: 1,
+        category: "Experte: Fertigung"
+    },
+    {
+        question: "Welcher Kunststoff ist ein Duroplast?",
+        answers: [
+            "Polyethylen (PE)",
+            "Polypropylen (PP)",
+            "Epoxidharz (EP)",
+            "Polyvinylchlorid (PVC)",
+            "Polyamid (PA)"
+        ],
+        correct: 2,
+        category: "Experte: Werkstoffe"
+    },
+    {
+        question: "Was ist der wesentliche Unterschied zwischen Löten und Schweißen?",
+        answers: [
+            "Löten ist immer heißer als Schweißen.",
+            "Beim Schweißen wird der Grundwerkstoff aufgeschmolzen, beim Löten nur das Lot (Adhäsion).",
+            "Schweißen ist nur für Kunststoffe.",
+            "Löten ist eine formschlüssige Verbindung.",
+            "Es gibt keinen Unterschied."
+        ],
+        correct: 1,
+        category: "Experte: Fügetechnik"
+    },
+    {
+        question: "Wofür steht die Abkürzung 'STEP' im Datenaustausch?",
+        answers: [
+            "Standard for the Exchange of Product model data",
+            "System Technical Exchange Program",
+            "Simple Text Export Protocol",
+            "Solid Transfer Engineering Part",
+            "Standard Tool Export Process"
+        ],
+        correct: 0,
+        category: "Experte: CAD Daten"
+    },
+    {
+        question: "Wie wird ein Gewinde M10 x 1 bezeichnet?",
+        answers: [
+            "Metrisches Regelgewinde",
+            "Metrisches Feingewinde",
+            "Trapezgewinde",
+            "Rohrgewinde",
+            "Sägengewinde"
+        ],
+        correct: 1,
+        category: "Experte: Maschinenelemente"
+    },
+    {
+        question: "Welches Verfahren eignet sich am besten für die Herstellung von hohlen Kunststoffkörpern (z.B. Flaschen)?",
+        answers: [
+            "Spritzgießen",
+            "Extrusionsblasformen",
+            "Kalandrieren",
+            "Vakuumtiefziehen",
+            "Rotationsformen"
+        ],
+        correct: 1,
+        category: "Experte: Fertigung"
+    },
+    {
+        question: "Was bedeutet die Oberflächenangabe Rz 16?",
+        answers: [
+            "Mittenrauwert 16 µm",
+            "Gemittelte Rautiefe 16 µm",
+            "Maximale Rautiefe 16 mm",
+            "Rauheit 16 %",
+            "Bearbeitungszugabe 16 mm"
+        ],
+        correct: 1,
+        category: "Experte: Oberfläche"
+    }
+];
+
+// --- Logik ---
+
+let currentQuizData = [];
+let currentQuestionIndex = 0;
+let score = 0;
+let isAIMode = false;
+let isDarkMode = false;
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+    initQuiz();
+});
+
+function initQuiz() {
+    // Merge Arrays based on mode
+    if (isAIMode) {
+        currentQuizData = [...originalQuestions, ...aiQuestions];
+    } else {
+        currentQuizData = [...originalQuestions];
+    }
+    
+    // Shuffle
+    currentQuizData.sort(() => Math.random() - 0.5);
+    
+    currentQuestionIndex = 0;
+    score = 0;
+    showQuestion();
+    updateProgress();
+    
+    // Button Text Update
+    const aiBtn = document.getElementById('ai-toggle');
+    aiBtn.innerText = isAIMode ? "🤖 Experte: AN" : "🤖 Experte: AUS";
+    if(isAIMode) aiBtn.classList.add('active'); else aiBtn.classList.remove('active');
+}
+
+function showQuestion() {
+    const card = document.getElementById('quiz-card');
+    
+    if (currentQuestionIndex >= currentQuizData.length) {
+        showResults(card);
+        return;
+    }
+
+    const q = currentQuizData[currentQuestionIndex];
+    const wrong = currentQuestionIndex - score; 
+    
+    let html = `
+        <div class="question-meta">
+            <!-- LINKE SEITE: Nur noch die Fragenummer -->
+            <span class="meta-count">FRAGE ${currentQuestionIndex + 1} / ${currentQuizData.length}</span>
+            
+            <!-- RECHTE SEITE: Score -->
+            <div class="score-indicator">
+                <span class="score-correct">✔ ${score}</span>
+                <span class="score-wrong">✘ ${wrong}</span>
+            </div>
+        </div>
+        
+        <div class="question-text">${q.question}</div>
+    `;
+
+    if (q.image) html += `<div class="img-container">${q.image}</div>`;
+
+    html += `<div class="answers-grid" id="answers-container"></div>`;
+    html += `<button class="next-btn" id="next-btn" onclick="nextQuestion()">Weiter</button>`;
+
+    card.innerHTML = html;
+
+    const answersContainer = document.getElementById('answers-container');
+    q.answers.forEach((answer, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn';
+        btn.innerText = answer;
+        btn.onclick = () => handleAnswer(index, q.correct, btn);
+        answersContainer.appendChild(btn);
+    });
+}
+
+function handleAnswer(selectedIndex, correctIndex, btnClicked) {
+    const buttons = document.querySelectorAll('.answer-btn');
+    const nextBtn = document.getElementById('next-btn');
+
+    // Disable all
+    buttons.forEach(b => b.disabled = true);
+
+    if (selectedIndex === correctIndex) {
+        btnClicked.classList.add('correct');
+        score++;
+    } else {
+        btnClicked.classList.add('wrong');
+        // Show correct one
+        buttons[correctIndex].classList.add('correct');
+    }
+
+    nextBtn.classList.add('show');
+    updateProgress();
+}
+
+function nextQuestion() {
+    currentQuestionIndex++;
+    showQuestion();
+    updateProgress();
+}
+
+function updateProgress() {
+    const bar = document.getElementById('progress-bar');
+    if (currentQuestionIndex > 0) {
+        const pct = (currentQuestionIndex / currentQuizData.length) * 100;
+        bar.style.width = pct + '%';
+    } else {
+        bar.style.width = '0%';
+    }
+}
+
+function showResults(card) {
+    const pct = Math.round((score / currentQuizData.length) * 100);
+    let msg = "";
+    if(pct >= 90) msg = "Hervorragend! Bereit für die Prüfung.";
+    else if(pct >= 70) msg = "Gut gemacht! Ein paar Lücken gibt es noch.";
+    else msg = "Übung macht den Meister. Wiederhole die Fragen noch einmal.";
+
+    card.innerHTML = `
+        <div class="result-container">
+            <div class="score-circle">${pct}%</div>
+            <h2>Quiz Beendet</h2>
+            <p>Du hast <strong>${score}</strong> von <strong>${currentQuizData.length}</strong> Fragen richtig beantwortet.</p>
+            <p style="margin-top:20px; color: var(--primary)">${msg}</p>
+            <button class="next-btn show" onclick="initQuiz()">Neustarten ⟳</button>
+        </div>
+    `;
+    document.getElementById('progress-bar').style.width = '100%';
+}
+
+// --- Toggle Funktionen ---
+
+function toggleAIMode() {
+    isAIMode = !isAIMode;
+    initQuiz(); // Restart with new setting
+}
+
+function toggleDarkMode() {
+    document.body.classList.toggle("dark");
+    isDarkMode = !isDarkMode;
+    const btn = document.querySelector(".controls button:last-child");
+    btn.innerText = isDarkMode ? "☀️" : "🌙";
+}
+</script>
+
+</body>
+</html>
